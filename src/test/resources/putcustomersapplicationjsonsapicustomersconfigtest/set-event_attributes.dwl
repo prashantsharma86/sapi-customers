@@ -1,0 +1,30 @@
+{
+  "headers": {
+    "client_secret": "ddf",
+    "client_id": "dfdff",
+    "content-type": "application/json",
+    "user-agent": "PostmanRuntime/7.29.0",
+    "accept": "*/*",
+    "postman-token": "a6abc2c3-506d-4d55-8534-1e757ca7b305",
+    "host": "localhost:8081",
+    "accept-encoding": "gzip, deflate, br",
+    "connection": "keep-alive",
+    "content-length": "115"
+  },
+  "clientCertificate": null,
+  "method": "PUT",
+  "scheme": "http",
+  "queryParams": {},
+  "requestUri": "/api/customers",
+  "queryString": "",
+  "version": "HTTP/1.1",
+  "maskedRequestPath": "/customers",
+  "listenerPath": "/api/*",
+  "localAddress": "/127.0.0.1:8081",
+  "relativePath": "/api/customers",
+  "uriParams": {},
+  "rawRequestUri": "/api/customers",
+  "rawRequestPath": "/api/customers",
+  "remoteAddress": "/127.0.0.1:50903",
+  "requestPath": "/api/customers"
+}

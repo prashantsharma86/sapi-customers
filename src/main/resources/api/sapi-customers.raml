@@ -1,0 +1,78 @@
+#%RAML 1.0
+title: sapi-sfdc-contact
+documentation:
+  - title: sapi-sfdc-contact API
+    content: This System API is to retrive contacts from org62.
+version: v1
+
+
+
+traits:
+  client-credentials: !include securitySchemes/securityScheme.raml
+  standard-error-responses: !include errorResponse/standard-error-response.raml
+
+/customers:
+  get:
+    is:
+      - client-credentials
+      - standard-error-responses
+    queryParameters:
+      firstName:
+        example: "testName"
+        type: string
+        required: false
+      lastName:
+        example: "testName"
+        type: string
+        required: false
+      address:
+        example: "testAddress"
+        type: string
+        required: false
+    responses:
+      "200":
+        body:
+          application/json:
+            example: !include response/example/get-response.json
+  post:
+    is: [client-credentials,standard-error-responses]
+    description: create contacts records.
+    body:
+      application/json:
+        example: !include request/example/post-request.json
+    responses:
+      201:
+        body:
+          application/json:
+            example: !include response/example/post-response.json
+ 
+  put:
+    is: [client-credentials,standard-error-responses]
+    description: create contacts records.
+    body:
+      application/json:
+        example: !include request/example/put-request.json
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include response/example/put-response.json    
+  /{customerId}:
+    get:
+      is:
+        - client-credentials
+        - standard-error-responses
+      responses:
+        "200":
+          body:
+            application/json:
+              example: !include response/example/get-response.json
+    delete:
+      is: [client-credentials,standard-error-responses]
+      description: create contacts records.
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include response/example/delete-response.json    
+        

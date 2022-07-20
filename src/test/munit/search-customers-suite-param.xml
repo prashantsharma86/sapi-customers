@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="search-customers-suite-param.xml" />
+	<munit:test name="get:\customers:sapi-customers-config-test" doc:id="6c0767af-6584-4320-91ea-f9a90edff919" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Select" doc:id="722273ec-7e2c-48bc-bc9b-c28ae200e186" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="30c67ba1-1e6f-4133-b31d-81bc973db23e" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/java --- readUrl('classpath://getcustomerssapicustomersconfigtest/mock_payload.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="outboundHeaders" value="#[readUrl('classpath://getcustomerssapicustomersconfigtest/mock_variable_.dwl')]" />
+						<munit-tools:variable key="dbQuery" value="#[output application/java --- readUrl('classpath://getcustomerssapicustomersconfigtest/mock_variable_1.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="333883d6-17d5-4b4d-9e26-a2a6bfa5f548" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://getcustomerssapicustomersconfigtest/set-event_payload.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[readUrl('classpath://getcustomerssapicustomersconfigtest/set-event_attributes.dwl')]" />
+				<munit:variables >
+					<munit:variable key="outboundHeaders" value="#[readUrl('classpath://getcustomerssapicustomersconfigtest/set-event_variable_.dwl')]" />
+				</munit:variables>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to get:\customers:sapi-customers-config" doc:id="f7702412-31fa-4c5b-a556-3ac74b2190ba" name="get:\customers:sapi-customers-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="dbc97d52-6abc-49ee-b59b-320e4745b123" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import getcustomerssapicustomersconfigtest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+
+</mule>

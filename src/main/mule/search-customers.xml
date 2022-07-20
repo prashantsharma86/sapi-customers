@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <flow name="get:\customers:sapi-customers-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+            </ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="dbQuery" ><![CDATA[%dw 2.0
+output application/java
+fun NullCheckValue(field, value, actualValue)  = 
+if(value != null and value != '') field ++  "='" ++ actualValue ++ "'" else null
+---
+"Select * from customer where " ++ 
+([NullCheckValue('first_name', attributes.queryParams.firstName,attributes.queryParams.firstName),NullCheckValue('last_name', attributes.queryParams.secondName,attributes.queryParams.lastName),NullCheckValue('address', attributes.queryParams.address,attributes.queryParams.address)] 
+	filter $ != null reduce ($$ ++ " AND " ++ $)
+)]]></ee:set-variable>
+			</ee:variables>
+        </ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="c676e934-9650-4eff-be79-cc3fb59873c4" message='"start search data" ++  ++ #[payload]'/>
+		<until-successful maxRetries="${insert.max.retries}" doc:name="Until Successful" doc:id="75127591-2382-4786-8fad-a30f0216aaf6" millisBetweenRetries="${insert.mills.retries}">
+			<try doc:name="Try" doc:id="f5a4ad79-5666-4807-bb00-1b35b95433ca">
+				<db:select doc:name="Select" doc:id="30c67ba1-1e6f-4133-b31d-81bc973db23e" config-ref="Database_Config">
+					<db:sql ><![CDATA[#[vars.dbQuery]]]></db:sql>
+				</db:select>
+				<error-handler >
+					<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="bf0ba26c-2daf-489b-9646-488c772ab191" >
+						<logger level="INFO" doc:name="Copy_of_Logger" doc:id="e5c040c8-5aab-4587-b982-986ce7bd7e4a" message='"error occured" ++ #[error.detailedDescription]' />
+						<ee:transform doc:name="Copy_of_Transform Message" doc:id="349f943a-ccf2-4ee0-9d87-33f59ab7a48b" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{ "status": "598", "message": error.detailedDescription }]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</on-error-propagate>
+				</error-handler>
+		</try>
+		</until-successful>
+        
+        
+        
+        
+        <logger level="INFO" doc:name="Logger" doc:id="7b75ce11-b680-4fa1-a4b3-d57fc1e939e4" message='"search data finished"' />
+		<ee:transform doc:name="Transform Message" doc:id="4c4b5e80-b2ea-4127-b09d-722a6acdeaf7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+payload map (item, index) ->  {
+	"customerId": item.id,
+	"firstName":item.first_name,
+	"lastName": item.last_name,
+	"address": item.address
+}
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+    <flow name="get:\customers\(customerId):sapi-customers-config">
+		<logger level="INFO" doc:name="Logger" doc:id="bcb032ee-0d33-4dea-ad3d-803b311fe930" message="&quot;start search data&quot; ++  ++ #[attributes.uriParams.'customerId']"/>
+		<until-successful maxRetries="${insert.max.retries}" doc:name="Until Successful" doc:id="bf3cfc25-dbf5-4e8a-a044-0089d6640833" millisBetweenRetries="${insert.mills.retries}">
+			<try doc:name="Try" doc:id="b29d82a5-67ab-4fdb-be0f-1174df46904c">
+				<db:select doc:name="Select" doc:id="8925042e-abd6-473c-80fa-4a348331c0f5" config-ref="Database_Config">
+					<db:sql ><![CDATA[select * from customer where id = :customerId]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	"customerId": attributes.uriParams.'customerId'
+}]]]></db:input-parameters>
+				</db:select>
+				<error-handler >
+					<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="b91a0ad7-f188-4af0-8853-d25111741b11" >
+						<logger level="INFO" doc:name="Copy_of_Logger" doc:id="a2d272de-e502-4ae2-9a7b-270d5fb0ddbb" message='"error occured" ++ #[error.detailedDescription]' />
+						<ee:transform doc:name="Copy_of_Transform Message" doc:id="40c25b71-514f-41ef-974e-06461764d12f" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{ "status": "598", "message": error.detailedDescription }]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</on-error-propagate>
+				</error-handler>
+		</try>
+		</until-successful>
+        
+        
+        
+        
+        <logger level="INFO" doc:name="Logger" doc:id="b49b6dd6-9042-474c-b72b-fe47cfc42fa3" message="&quot;search data finished&quot; ++  ++ #[attributes.uriParams.'customerId']" />
+		<ee:transform doc:name="Transform Message" doc:id="6e4d8d86-91a7-4f84-8db4-82c775eda130" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map (item, index) ->  {
+	"customerId": item.id,
+	"firstName":item.first_name,
+	"lastName": item.last_name,
+	"address": item.address
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+</mule>

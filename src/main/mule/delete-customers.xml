@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <flow name="delete:\customers\(customerId):sapi-customers-config">
+        
+        <logger level="INFO" doc:name="Logger" doc:id="7a018077-ed55-487b-8235-ff29148f151a" message="&quot;start delete data&quot; ++  ++ #[attributes.uriParams.'customerId']"/>
+		<until-successful maxRetries="${insert.max.retries}" doc:name="Until Successful" doc:id="41c65c7f-3aca-4ec4-ad37-b10a91fe994e" millisBetweenRetries="${insert.mills.retries}">
+			<try doc:name="Try" doc:id="e21269a9-dede-4eb2-9723-2cc72379ef76">
+				<db:delete doc:name="Delete" doc:id="fd5b0c31-b61c-4694-a7a1-56f66e3a23ae" config-ref="Database_Config">
+					<db:sql ><![CDATA[${delete.query}]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	"customerId":attributes.uriParams.'customerId'
+}]]]></db:input-parameters>
+				</db:delete>
+				<error-handler >
+					<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="1369fd4e-4ea3-4da4-bb3c-1765825398b8" >
+						<logger level="INFO" doc:name="Copy_of_Logger" doc:id="5ba58723-b430-4130-bac0-1cbd5c5b22e1" message='"error occured" ++ #[error.detailedDescription]' />
+						<ee:transform doc:name="Copy_of_Transform Message" doc:id="f27c982d-f48c-4e4c-b3c6-2ae4262ee7c8" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{ "status": "598", "message": error.detailedDescription }]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</on-error-propagate>
+				</error-handler>
+		</try>
+		</until-successful>
+        
+        
+        
+        
+        <logger level="INFO" doc:name="Logger" doc:id="ed356dbf-b53d-4efb-9e30-c5ffe04d35e0" message="&quot;insert data finished&quot; ++  ++ #[attributes.uriParams.'customerId']" />
+		<ee:transform doc:name="Transform Message" doc:id="e1a4727c-a4cf-48a1-8095-b4188fdfa813" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "status":"success"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+</mule>

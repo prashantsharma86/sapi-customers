@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    
+	<flow name="post:\customers:application\json:sapi-customers-config">
+		<logger level="INFO" doc:name="Logger" doc:id="3ead26fe-21f6-4d80-a85c-c15bd8715b72" message='"start insert data" ++ #[payload]'/>
+		<until-successful maxRetries="${insert.max.retries}" doc:name="Until Successful" doc:id="ff8722bc-5f06-42ab-a75f-e3268a31f4d2" millisBetweenRetries="${insert.mills.retries}">
+			<try doc:name="Try" doc:id="d7ed0817-5624-490d-b20a-574ae048bb92">
+			<db:insert doc:name="Insert" doc:id="3e5f8653-af5c-4a46-bae2-d70bccbc8fd2" config-ref="Database_Config">
+			<db:sql><![CDATA[${insert.query}]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	"firstName":payload.firstName,
+	"lastName":payload.lastName,
+	"address":payload.address
+}]]]></db:input-parameters>
+		</db:insert>
+				<error-handler >
+					<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="ba6647e0-37f8-4871-b04d-676ab12fe1a0" >
+						<logger level="INFO" doc:name="Copy_of_Logger" doc:id="00400784-822a-4ee6-a7ba-6e55962eea05" message='"error occured" ++ #[error.detailedDescription]' />
+						<ee:transform doc:name="Copy_of_Transform Message" doc:id="91d0feed-4d33-4b53-8a4a-6363dc3171fb" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{ "status": "598", "message": error.detailedDescription }]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</on-error-propagate>
+				</error-handler>
+		</try>
+		</until-successful>
+		<logger level="INFO" doc:name="Logger" doc:id="6bbf05a1-4a35-46a8-8652-1d08830a13c1" message='"insert data finished" ++ #[payload]' />
+		<ee:transform doc:name="Transform Message" doc:id="8cb13ce3-4243-4194-b2e2-6e3d587e4870" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "status":"success"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+</mule>
